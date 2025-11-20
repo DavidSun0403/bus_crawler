@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, render_template
+from flask import Flask, jsonify, render_template, request
 import sqlite3
 from datetime import datetime
 
@@ -18,29 +18,70 @@ def format_records(records):
     return [dict(record) for record in records]
 
 
+def filter_by_date_and_search(table_name, date_str=None, search_query=None):
+    """根據日期和搜索關鍵詞過濾數據"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    query = f'SELECT * FROM {table_name} WHERE 1=1'
+    params = []
+    
+    # 日期過濾
+    if date_str:
+        query += ' AND DATE(estimated_departure_time) = ?'
+        params.append(date_str)
+    
+    # 搜索過濾（搜索到達時間或出發時間）
+    if search_query:
+        query += ' AND (estimated_arrival_time LIKE ? OR estimated_departure_time LIKE ?)'
+        search_pattern = f'%{search_query}%'
+        params.extend([search_pattern, search_pattern])
+    
+    query += ' ORDER BY estimated_departure_time DESC LIMIT 100'
+    
+    cursor.execute(query, params)
+    records = cursor.fetchall()
+    conn.close()
+    
+    return format_records(records)
+
+
 @app.route('/')
 def index():
-    """主頁面"""
+    """主頁面 - 導航頁面"""
     return render_template('index.html')
+
+
+@app.route('/route1')
+def route1():
+    """路線1頁面 - 37路深圳灣站"""
+    return render_template('route1.html')
+
+
+@app.route('/route2')
+def route2():
+    """路線2頁面 - 37路友新街站"""
+    return render_template('route2.html')
+
+
+@app.route('/route3')
+def route3():
+    """路線3頁面 - 38路"""
+    return render_template('route3.html')
 
 
 @app.route('/api/bus_records')
 def get_bus_records():
     """獲取第一個表的數據（元朗到深圳灣 - 深圳灣站）"""
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('''
-            SELECT * FROM bus_records 
-            ORDER BY estimated_departure_time DESC 
-            LIMIT 50
-        ''')
-        records = cursor.fetchall()
-        conn.close()
+        date_str = request.args.get('date')
+        search_query = request.args.get('search')
+        
+        records = filter_by_date_and_search('bus_records', date_str, search_query)
         
         return jsonify({
             'success': True,
-            'data': format_records(records),
+            'data': records,
             'count': len(records)
         })
     except Exception as e:
@@ -54,19 +95,14 @@ def get_bus_records():
 def get_bus_records_2():
     """獲取第二個表的數據（元朗到深圳灣 - 友新街站）"""
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('''
-            SELECT * FROM bus_records_2 
-            ORDER BY estimated_departure_time DESC 
-            LIMIT 50
-        ''')
-        records = cursor.fetchall()
-        conn.close()
+        date_str = request.args.get('date')
+        search_query = request.args.get('search')
+        
+        records = filter_by_date_and_search('bus_records_2', date_str, search_query)
         
         return jsonify({
             'success': True,
-            'data': format_records(records),
+            'data': records,
             'count': len(records)
         })
     except Exception as e:
@@ -80,19 +116,14 @@ def get_bus_records_2():
 def get_bus_records_3():
     """獲取第三個表的數據（38路線）"""
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('''
-            SELECT * FROM bus_records_3 
-            ORDER BY estimated_departure_time DESC 
-            LIMIT 50
-        ''')
-        records = cursor.fetchall()
-        conn.close()
+        date_str = request.args.get('date')
+        search_query = request.args.get('search')
+        
+        records = filter_by_date_and_search('bus_records_3', date_str, search_query)
         
         return jsonify({
             'success': True,
-            'data': format_records(records),
+            'data': records,
             'count': len(records)
         })
     except Exception as e:

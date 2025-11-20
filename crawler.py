@@ -365,7 +365,7 @@ def main():
     
     # 持續運行，使用隨機間隔
     while is_within_service_hours():
-        delay = random.randint(280, 309)
+        delay = random.randint(180, 242)
         logging.info(f'等待 {delay} 秒後執行下一次請求')
         time.sleep(delay)
         

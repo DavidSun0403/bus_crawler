@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>巴士到達時間記錄</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .table-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .table-section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .info {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 0.95em;
+        }
+        
+        .record-count {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-left: 10px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .departed-yes {
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .departed-no {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        .no-gps {
+            color: #ffc107;
+        }
+        
+        .wheelchair {
+            color: #17a2b8;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 1.2em;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .refresh-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+        
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
+        .refresh-btn:active {
+            transform: translateY(0);
+        }
+        
+        .last-update {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚌 巴士到達時間記錄系統</h1>
+        
+        <div class="last-update" id="lastUpdate">最後更新：載入中...</div>
+        
+        <div style="text-align: center;">
+            <button class="refresh-btn" onclick="loadAllData()">🔄 刷新數據</button>
+        </div>
+        
+        <!-- 第一個表格：元朗到深圳灣 - 深圳灣站 -->
+        <div class="table-section">
+            <h2>37路 - 深圳灣站 (元朗 → 深圳灣) <span class="record-count" id="count1">0 條記錄</span></h2>
+            <div class="info">全程約 40 分鐘 | 運營時間：06:00-22:00 | 每 20 分鐘一班</div>
+            <div id="table1"></div>
+        </div>
+        
+        <!-- 第二個表格：元朗到深圳灣 - 友新街站 -->
+        <div class="table-section">
+            <h2>37路 - 友新街站 (元朗 → 深圳灣) <span class="record-count" id="count2">0 條記錄</span></h2>
+            <div class="info">全程約 4 分鐘 | 運營時間：06:00-22:00 | 每 20 分鐘一班</div>
+            <div id="table2"></div>
+        </div>
+        
+        <!-- 第三個表格：38路線 -->
+        <div class="table-section">
+            <h2>38路 - 路線 3 <span class="record-count" id="count3">0 條記錄</span></h2>
+            <div class="info">全程約 40 分鐘 | 運營時間：07:10-22:50 | 每 20 分鐘一班（偏移 10 分鐘）</div>
+            <div id="table3"></div>
+        </div>
+    </div>
+
+    <script>
+        function formatDateTime(dateTimeStr) {
+            if (!dateTimeStr) return '-';
+            const date = new Date(dateTimeStr);
+            return date.toLocaleString('zh-HK', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+
+        function createTable(data) {
+            if (!data || data.length === 0) {
+                return '<div class="loading">暫無數據</div>';
+            }
+
+            let html = '<table>';
+            html += '<thead><tr>';
+            html += '<th>ID</th>';
+            html += '<th>預計到達時間</th>';
+            html += '<th>預計出發時間</th>';
+            html += '<th>已出發</th>';
+            html += '<th>無GPS</th>';
+            html += '<th>輪椅可用</th>';
+            html += '<th>生成時間</th>';
+            html += '<th>記錄時間</th>';
+            html += '</tr></thead><tbody>';
+
+            data.forEach(record => {
+                html += '<tr>';
+                html += `<td>${record.id}</td>`;
+                html += `<td>${formatDateTime(record.estimated_arrival_time)}</td>`;
+                html += `<td>${formatDateTime(record.estimated_departure_time)}</td>`;
+                html += `<td class="${record.departed ? 'departed-yes' : 'departed-no'}">${record.departed ? '✓ 是' : '✗ 否'}</td>`;
+                html += `<td class="${record.no_gps ? 'no-gps' : ''}">${record.no_gps ? '⚠ 是' : '✓ 否'}</td>`;
+                html += `<td class="${record.wheel_chair ? 'wheelchair' : ''}">${record.wheel_chair ? '♿ 是' : '✗ 否'}</td>`;
+                html += `<td>${formatDateTime(record.generate_time)}</td>`;
+                html += `<td>${formatDateTime(record.created_at)}</td>`;
+                html += '</tr>';
+            });
+
+            html += '</tbody></table>';
+            return html;
+        }
+
+        function updateLastUpdateTime() {
+            const now = new Date();
+            document.getElementById('lastUpdate').textContent = 
+                `最後更新：${now.toLocaleString('zh-HK', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                })}`;
+        }
+
+        async function loadAllData() {
+            try {
+                const response = await fetch('/api/all');
+                const result = await response.json();
+
+                if (result.success) {
+                    document.getElementById('table1').innerHTML = createTable(result.data.bus_records);
+                    document.getElementById('table2').innerHTML = createTable(result.data.bus_records_2);
+                    document.getElementById('table3').innerHTML = createTable(result.data.bus_records_3);
+
+                    document.getElementById('count1').textContent = `${result.counts.bus_records} 條記錄`;
+                    document.getElementById('count2').textContent = `${result.counts.bus_records_2} 條記錄`;
+                    document.getElementById('count3').textContent = `${result.counts.bus_records_3} 條記錄`;
+
+                    updateLastUpdateTime();
+                } else {
+                    document.getElementById('table1').innerHTML = `<div class="error">載入錯誤：${result.error}</div>`;
+                    document.getElementById('table2').innerHTML = `<div class="error">載入錯誤：${result.error}</div>`;
+                    document.getElementById('table3').innerHTML = `<div class="error">載入錯誤：${result.error}</div>`;
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+                const errorMsg = `<div class="error">載入數據失敗：${error.message}</div>`;
+                document.getElementById('table1').innerHTML = errorMsg;
+                document.getElementById('table2').innerHTML = errorMsg;
+                document.getElementById('table3').innerHTML = errorMsg;
+            }
+        }
+
+        // 頁面載入時自動載入數據
+        window.addEventListener('load', loadAllData);
+
+        // 每 30 秒自動刷新一次
+        setInterval(loadAllData, 30000);
+    </script>
+</body>
+</html>

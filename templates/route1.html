@@ -421,6 +421,15 @@
             });
         }
 
+        function calculateDuration(departureTime, arrivalTime) {
+            if (!departureTime || !arrivalTime) return '-';
+            const departure = new Date(departureTime);
+            const arrival = new Date(arrivalTime);
+            const durationMs = arrival - departure;
+            const durationMinutes = Math.round(durationMs / 1000 / 60);
+            return durationMinutes >= 0 ? `${durationMinutes} 分鐘` : '-';
+        }
+
         function createTable(data) {
             if (!data || data.length === 0) {
                 return '<div class="loading">暫無數據</div>';
@@ -431,6 +440,7 @@
             html += '<th>ID</th>';
             html += '<th>出發時間</th>';
             html += '<th>到達時間</th>';
+            html += '<th>耗時</th>';
             html += '<th>已出發</th>';
             html += '<th>無GPS</th>';
             html += '<th>輪椅可用</th>';
@@ -443,6 +453,7 @@
                 html += `<td>${record.id}</td>`;
                 html += `<td>${formatDateTime(record.estimated_departure_time)}</td>`;
                 html += `<td>${formatDateTime(record.estimated_arrival_time)}</td>`;
+                html += `<td>${calculateDuration(record.estimated_departure_time, record.estimated_arrival_time)}</td>`;
                 html += `<td class="${record.departed ? 'departed-yes' : 'departed-no'}">${record.departed ? '✓ 是' : '✗ 否'}</td>`;
                 html += `<td class="${record.no_gps ? 'no-gps' : ''}">${record.no_gps ? '⚠ 是' : '✓ 否'}</td>`;
                 html += `<td class="${record.wheel_chair ? 'wheelchair' : ''}">${record.wheel_chair ? '♿ 是' : '✗ 否'}</td>`;

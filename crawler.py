@@ -1,7 +1,6 @@
 import requests
 import sqlite3
 import time
-import schedule
 from datetime import datetime, timedelta
 import logging
 import random

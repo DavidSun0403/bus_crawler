@@ -428,8 +428,8 @@
             let html = '<table>';
             html += '<thead><tr>';
             html += '<th>ID</th>';
-            html += '<th>預計到達時間</th>';
-            html += '<th>預計出發時間</th>';
+            html += '<th>出發時間</th>';
+            html += '<th>到達時間</th>';
             html += '<th>已出發</th>';
             html += '<th>無GPS</th>';
             html += '<th>輪椅可用</th>';
@@ -440,8 +440,8 @@
             data.forEach(record => {
                 html += '<tr>';
                 html += `<td>${record.id}</td>`;
-                html += `<td>${formatDateTime(record.estimated_arrival_time)}</td>`;
                 html += `<td>${formatDateTime(record.estimated_departure_time)}</td>`;
+                html += `<td>${formatDateTime(record.estimated_arrival_time)}</td>`;
                 html += `<td class="${record.departed ? 'departed-yes' : 'departed-no'}">${record.departed ? '✓ 是' : '✗ 否'}</td>`;
                 html += `<td class="${record.no_gps ? 'no-gps' : ''}">${record.no_gps ? '⚠ 是' : '✓ 否'}</td>`;
                 html += `<td class="${record.wheel_chair ? 'wheelchair' : ''}">${record.wheel_chair ? '♿ 是' : '✗ 否'}</td>`;

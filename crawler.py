@@ -337,6 +337,7 @@ def is_within_service_hours():
     current_time = now.time()
     service_start = datetime.strptime('06:00:00', '%H:%M:%S').time()
     service_end = datetime.strptime('22:00:00', '%H:%M:%S').time()
+    print(f'Current time: {current_time}, Service hours: {service_start} - {service_end}')
     return service_start <= current_time <= service_end
 
 
@@ -364,14 +365,13 @@ def main():
     logging.info('定時任務已設置，每3-4分鐘隨機執行一次（僅在06:00-22:00運營時間內）')
     
     # 持續運行，使用隨機間隔
-    while is_within_service_hours():
+    while True:
+        if(is_within_service_hours()):
+            # 執行任務（會檢查運營時間）
+            scheduled_fetch_and_save()
         delay = random.randint(180, 242)
         logging.info(f'等待 {delay} 秒後執行下一次請求')
         time.sleep(delay)
-        
-        # 執行任務（會檢查運營時間）
-        scheduled_fetch_and_save()
-
 
 if __name__ == '__main__':
     main()

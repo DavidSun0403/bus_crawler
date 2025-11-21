@@ -332,11 +332,11 @@ def fetch_and_save():
 
 
 def is_within_service_hours():
-    """檢查當前時間是否在運營時間內（06:00-22:00）"""
+    """檢查當前時間是否在運營時間內（06:00-22:50）"""
     now = datetime.now()
     current_time = now.time()
     service_start = datetime.strptime('06:00:00', '%H:%M:%S').time()
-    service_end = datetime.strptime('22:00:00', '%H:%M:%S').time()
+    service_end = datetime.strptime('22:50:00', '%H:%M:%S').time()
     print(f'Current time: {current_time}, Service hours: {service_start} - {service_end}')
     return service_start <= current_time <= service_end
 

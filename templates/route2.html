@@ -437,7 +437,6 @@
 
             let html = '<table>';
             html += '<thead><tr>';
-            html += '<th>ID</th>';
             html += '<th>出發時間</th>';
             html += '<th>到達時間</th>';
             html += '<th>耗時</th>';
@@ -450,7 +449,6 @@
 
             data.forEach(record => {
                 html += '<tr>';
-                html += `<td>${record.id}</td>`;
                 html += `<td>${formatDateTime(record.estimated_departure_time)}</td>`;
                 html += `<td>${formatDateTime(record.estimated_arrival_time)}</td>`;
                 html += `<td>${calculateDuration(record.estimated_departure_time, record.estimated_arrival_time)}</td>`;
